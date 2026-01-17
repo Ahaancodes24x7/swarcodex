@@ -339,6 +339,10 @@ const TeacherDashboard = () => {
     setSessionDialogOpen(false);
     navigate(`/session?student=${selectedStudent}&type=${sessionType}&grade=${grade}&lang=${language}`);
   };
+  const handleWrittenTest = () => {
+    window.location.href = 'https://jrqtpp3s-5000.inc1.devtunnels.ms/';
+  };
+
 
   const handleExportPDF = (session: Session) => {
     const interpretation = getScoreInterpretation(session.overall_score, session.session_type, t);
@@ -424,7 +428,7 @@ const TeacherDashboard = () => {
                   <div><CardTitle>{t('dashboard.students')}</CardTitle><CardDescription>{t('teacher.manageStudents')}</CardDescription></div>
                   <Dialog open={addStudentDialogOpen} onOpenChange={setAddStudentDialogOpen}>
                   <DialogTrigger asChild>
-  <Button>
+  <Button onClick={handleWrittenTest}>
     <Play className="h-4 w-4 mr-2" />
     {t('dashboard.startSession')}
   </Button>
