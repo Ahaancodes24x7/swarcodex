@@ -525,7 +525,7 @@ const TeacherDashboard = () => {
 
   <Button>
      <Play className="h-4 w-4 mr-2" />
-      {t('dashboard.written_test')}
+      {t('dashboard.writtentest')}
   </Button>
 </div>
 
