@@ -423,7 +423,19 @@ const TeacherDashboard = () => {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div><CardTitle>{t('dashboard.students')}</CardTitle><CardDescription>{t('teacher.manageStudents')}</CardDescription></div>
                   <Dialog open={addStudentDialogOpen} onOpenChange={setAddStudentDialogOpen}>
-                    <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4" /></Button></DialogTrigger>
+                   <div className="flex gap-2">
+  <DialogTrigger asChild>
+    <Button>
+      <Play className="h-4 w-4 mr-2" />
+      {t('dashboard.startSession')}
+    </Button>
+  </DialogTrigger>
+
+  <Button>
+    Written Test
+  </Button>
+</div>
+
                     <DialogContent>
                       <DialogHeader><DialogTitle>{t('teacher.addStudent')}</DialogTitle><DialogDescription>{t('teacher.enterDetails')}</DialogDescription></DialogHeader>
                       <div className="space-y-4 py-4">
