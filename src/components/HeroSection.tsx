@@ -7,33 +7,24 @@ import heroBackground from '@/assets/hero-background.jpg';
 const HeroSection = () => {
   const { t } = useLanguage();
 
-  // ✅ SAFE: features is now defined
+  // ✅ SAFE, STATIC FEATURE DATA (no i18n dependency)
   const features = [
-  {
-    icon: Mic,
-    title: t('hero.feature.voiceTitle', 'Voice-first Screening'),
-    desc: t(
-      'hero.feature.voiceDesc',
-      'Early identification using natural speech patterns.'
-    ),
-  },
-  {
-    icon: Brain,
-    title: t('hero.feature.aiTitle', 'AI-powered Analysis'),
-    desc: t(
-      'hero.feature.aiDesc',
-      'AI insights to detect learning differences early.'
-    ),
-  },
-  {
-    icon: Sparkles,
-    title: t('hero.feature.supportTitle', 'Personalized Support'),
-    desc: t(
-      'hero.feature.supportDesc',
-      'Tailored guidance for parents and teachers.'
-    ),
-  },
-];
+    {
+      icon: Mic,
+      title: 'Voice-first Screening',
+      desc: 'Early identification using natural speech patterns.',
+    },
+    {
+      icon: Brain,
+      title: 'AI-powered Analysis',
+      desc: 'AI insights to detect learning differences early.',
+    },
+    {
+      icon: Sparkles,
+      title: 'Personalized Support',
+      desc: 'Tailored guidance for parents and teachers.',
+    },
+  ];
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
@@ -75,7 +66,10 @@ const HeroSection = () => {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link to="/learn-more">
-            <Button size="lg" className="bg-card text-foreground hover:bg-card/90 group">
+            <Button
+              size="lg"
+              className="bg-card text-foreground hover:bg-card/90 group"
+            >
               {t('nav.learnMore')}
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
@@ -96,19 +90,12 @@ const HeroSection = () => {
           </Button>
         </div>
 
-        {/* ✅ Feature Cards (now SAFE) */}
+        {/* Feature Cards */}
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, idx) => (
             <div
               key={idx}
-              className="
-                bg-purple-900/25
-                backdrop-blur-md
-                rounded-xl
-                p-6
-                border border-white/10
-                shadow-lg
-              "
+              className="bg-purple-900/25 backdrop-blur-md rounded-xl p-6 border border-white/10 shadow-lg"
             >
               <feature.icon className="h-10 w-10 text-white mx-auto mb-4" />
 
