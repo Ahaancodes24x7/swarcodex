@@ -423,18 +423,12 @@ const TeacherDashboard = () => {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div><CardTitle>{t('dashboard.students')}</CardTitle><CardDescription>{t('teacher.manageStudents')}</CardDescription></div>
                   <Dialog open={addStudentDialogOpen} onOpenChange={setAddStudentDialogOpen}>
-                   <div className="flex gap-2">
-  <DialogTrigger asChild>
-    <Button>
-      <Play className="h-4 w-4 mr-2" />
-      {t('dashboard.startSession')}
-    </Button>
-  </DialogTrigger>
-
+                  <DialogTrigger asChild>
   <Button>
-    Written Test
+    <Play className="h-4 w-4 mr-2" />
+    {t('dashboard.startSession')}
   </Button>
-</div>
+</DialogTrigger>
 
                     <DialogContent>
                       <DialogHeader><DialogTitle>{t('teacher.addStudent')}</DialogTitle><DialogDescription>{t('teacher.enterDetails')}</DialogDescription></DialogHeader>
@@ -521,7 +515,19 @@ const TeacherDashboard = () => {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div><CardTitle>{t('dashboard.sessions')}</CardTitle><CardDescription>{t('teacher.recentSessions')}</CardDescription></div>
                   <Dialog open={sessionDialogOpen} onOpenChange={setSessionDialogOpen}>
-                    <DialogTrigger asChild><Button><Play className="h-4 w-4 mr-2" />{t('dashboard.startSession')}</Button></DialogTrigger>
+                    <div className="flex gap-2">
+  <DialogTrigger asChild>
+    <Button>
+      <Play className="h-4 w-4 mr-2" />
+      {t('dashboard.startSession')}
+    </Button>
+  </DialogTrigger>
+
+  <Button>
+    Written Test
+  </Button>
+</div>
+
                     <DialogContent>
                       <DialogHeader><DialogTitle>{t('teacher.startNewSession')}</DialogTitle></DialogHeader>
                       <div className="space-y-4 py-4">
