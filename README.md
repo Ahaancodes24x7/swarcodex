@@ -1,4 +1,4 @@
-🧠 SWAR – Voice-First AI Platform for Learning Difficulty Screening
+#🧠 SWAR – Voice-First AI Platform for Learning Difficulty Screening
 
 (Dyslexia · Dyscalculia · Dysgraphia)
 
