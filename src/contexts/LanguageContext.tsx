@@ -64,7 +64,7 @@ export const translations: Translations = {
   'dashboard.progress': { en: 'Progress', hi: 'प्रगति', pa: 'ਤਰੱਕੀ', ta: 'முன்னேற்றம்', te: 'పురోగతి' },
   'dashboard.students': { en: 'Students', hi: 'छात्र', pa: 'ਵਿਦਿਆਰਥੀ', ta: 'மாணவர்கள்', te: 'విద్యార్థులు' },
   'dashboard.startSession': { en: 'start session', hi: 'सत्र शुरू करें', pa: 'ਸੈਸ਼ਨ ਸ਼ੁਰੂ ਕਰੋ', ta: 'அமர்வைத் தொடங்கு', te: 'సెషన్ ప్రారంభించండి' },
-  'dashboard.written test': { en: 'written test', hi: 'लिखित परीक्षा', pa: 'ਲਿਖਤੀ ਟੈਸਟ', ta: 'எழுத்துத் தேர்வுு', te: 'వ్రాత పరీక్ష' },
+  'dashboard.writtentest': { en: 'written test', hi: 'लिखित परीक्षा', pa: 'ਲਿਖਤੀ ਟੈਸਟ', ta: 'எழுத்துத் தேர்வுு', te: 'వ్రాత పరీక్ష' },
   'dashboard.reports': { en: 'Reports', hi: 'रिपोर्ट', pa: 'ਰਿਪੋਰਟਾਂ', ta: 'அறிக்கைகள்', te: 'నివేదికలు' },
   'dashboard.resources': { en: 'Learning Resources', hi: 'शिक्षण संसाधन', pa: 'ਸਿੱਖਣ ਦੇ ਸਰੋਤ', ta: 'கற்றல் வளங்கள்', te: 'నేర్చుకునే వనరులు' },
   'dashboard.logout': { en: 'Logout', hi: 'लॉगआउट', pa: 'ਲੌਗਆਉਟ', ta: 'வெளியேறு', te: 'లాగ్అవుట్' },
