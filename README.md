@@ -1,73 +1,228 @@
-# Welcome to your Lovable project
+🧠 SWAR – Voice-First AI Platform for Learning Difficulty Screening
 
-## Project info
+(Dyslexia · Dyscalculia · Dysgraphia)
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+📌 Overview
 
-## How can I edit this code?
+SWAR is a voice-first, AI-powered screening and analysis platform designed to identify, analyze, and flag early indicators of learning difficulties such as Dyslexia, Dyscalculia, and Dysgraphia.
 
-There are several ways of editing your application.
+The platform combines speech recognition, machine learning, computer vision, and cognitive analytics to generate detailed, explainable, and educator-friendly reports — while maintaining ethical boundaries by acting as a screening and decision-support tool, not a medical diagnosis system.
 
-**Use Lovable**
+SWAR is built to be:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Accessible
 
-Changes made via Lovable will be committed automatically to this repo.
+Multilingual
 
-**Use your preferred IDE**
+Explainable
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Scalable
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Classroom-ready
 
-Follow these steps:
+🎯 Core Philosophy
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Early flagging + Explainable AI + Inclusive design
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+SWAR focuses on:
 
-# Step 3: Install the necessary dependencies.
-npm i
+Early detection, not diagnosis
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Explainability over black-box predictions
 
-**Edit a file directly in GitHub**
+Multimodal assessment (voice + written + visual)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Gamified, stress-free testing environments
 
-**Use GitHub Codespaces**
+🧩 Assessment Modes in SWAR
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+SWAR offers multiple assessment pathways, allowing flexibility based on student comfort, age, and accessibility needs.
 
-## What technologies are used for this project?
+🎙️ 1. Voice-First Assessment (Primary Mode)
 
-This project is built with:
+This is SWAR’s flagship feature.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+🔹 Workflow:
 
-## How can I deploy this project?
+Student responds verbally to guided reading and phonetic tasks
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Google Speech-to-Text API converts speech into text
 
-## Can I connect a custom domain to my Lovable project?
+The system computes:
 
-Yes, you can!
+Phonematic / phonemic error rate
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Substitution, omission, reversal, and blending errors
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+A custom ML pipeline analyzes speech patterns
+
+SWAR generates a detailed AI-driven cognitive report
+
+🔹 Key Metrics Analyzed:
+
+Phoneme substitution patterns
+
+Mispronunciation frequency
+
+Reading speed vs accuracy
+
+Hesitation and response latency
+
+Error clustering and consistency
+
+🔹 Targeted Conditions:
+
+Dyslexia
+
+Dyscalculia (verbal number reasoning)
+
+✍️ 2. Written Assessment Mode
+
+Designed for students who prefer or require non-verbal testing.
+
+🔹 Dyslexia (Written)
+
+Phoneme-grapheme mapping
+
+Letter-sound correspondence analysis
+
+Word reversal and sequencing checks
+
+Error distribution visualization using phoneme graphing
+
+🔹 Dysgraphia (Written)
+
+Handwriting or written-response analysis
+
+CNN-based model evaluates:
+
+Letter formation
+
+Stroke consistency
+
+Spatial alignment
+
+Writing pressure / structure (where available)
+
+🔹 Dyscalculia (Written)
+
+Number sense evaluation
+
+Symbol-quantity mismatch detection
+
+Step-wise problem solving analysis
+
+Arithmetic error classification
+
+🎮 3. Gamified Assessment Mode
+
+To reduce anxiety and improve engagement, SWAR includes game-based cognitive tests.
+
+🔹 Features:
+
+Reading games
+
+Number puzzles
+
+Pattern recognition tasks
+
+Memory and sequencing challenges
+
+🔹 Benefits:
+
+Natural behavior capture
+
+Reduced performance pressure
+
+Better data quality for ML models
+
+🧠 AI & ML Architecture
+🔹 Speech Recognition
+
+Google Speech-to-Text API
+
+High-accuracy multilingual speech transcription
+
+Robust handling of child speech and accents
+
+🔹 Feature Engineering (Core Intelligence)
+
+SWAR extracts 20+ cognitive and behavioral features, including:
+
+Reading speed and fatigue trends
+
+Accuracy and consistency metrics
+
+Phonological awareness indicators
+
+Response time variance
+
+Cognitive load estimation
+
+Working memory proxies
+
+🔹 ML Models Used
+Condition	Model Type
+Dyslexia	Neural-inspired, feature-engineered risk model
+Dysgraphia	Convolutional Neural Network (CNN)
+Dyscalculia	Rule-based + ML hybrid (numeric cognition features)
+
+⚠️ Models are designed for screening and explainability, not medical diagnosis.
+
+📊 Reports & Explainability
+
+Each assessment generates a comprehensive AI report, including:
+
+Risk level (None / Low / Medium / High)
+
+Confidence score
+
+Feature-wise breakdown
+
+Cognitive profiles:
+
+Reading speed
+
+Accuracy
+
+Phonemic awareness
+
+Attention stability
+
+Working memory
+
+Actionable recommendations for:
+
+Teachers
+
+Parents
+
+Specialists
+
+Reports are human-readable, not just numeric.
+
+🏫 Intended Users
+
+Students (K-12 and above)
+
+Teachers & Special Educators
+
+Parents & Guardians
+
+School Counselors
+
+Educational Institutions
+
+NGOs working in inclusive education
+
+🔐 Ethics, Privacy & Safety
+
+No medical diagnosis claims
+
+Data anonymization supported
+
+Secure storage practices
+
+Clear consent-based data collection
+
+Offline/local deployment possible for schools
