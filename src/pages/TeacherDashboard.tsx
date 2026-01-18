@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Users, Play, FileText, LogOut, Plus, TrendingUp, 
   AlertTriangle, CheckCircle, Loader2, Download, BookOpen,
-  Mail, Edit2, History
+  Mail, Edit2, History, ExternalLink
 } from 'lucide-react';
 import swarLogo from '@/assets/swar-logo.png';
 import { downloadPDF } from '@/lib/pdfExport';
@@ -100,7 +100,6 @@ const TeacherDashboard = () => {
     }
   }, [profile?.id]);
 
-  // Set up real-time subscription for sessions
   useEffect(() => {
     if (!profile?.id) return;
 
@@ -114,8 +113,7 @@ const TeacherDashboard = () => {
           table: 'assessment_sessions',
           filter: `teacher_id=eq.${profile.id}`,
         },
-        (payload) => {
-          console.log('Real-time session update:', payload);
+        () => {
           fetchSessions();
         }
       )
@@ -128,50 +126,38 @@ const TeacherDashboard = () => {
 
   const fetchStudents = async () => {
     if (!profile?.id) return;
-    
     try {
       const { data, error } = await supabase
         .from('students')
         .select('*')
         .eq('teacher_id', profile.id);
-      
       if (error) throw error;
-      
       if (data) {
-        const formattedStudents: Student[] = data.map(s => ({
+        setStudents(data.map(s => ({
           id: s.id,
           name: s.name,
           age: s.age,
           grade: Number.parseInt(s.grade || '1') || 1,
           parent_email: s.parent_email,
-        }));
-        setStudents(formattedStudents);
+        })));
       }
     } catch (error: any) {
       console.error('Error fetching students:', error);
-      toast({
-        title: 'Failed to load students',
-        description: error.message,
-        variant: 'destructive'
-      });
     }
   };
 
   const fetchSessions = async () => {
     if (!profile?.id) return;
     setSessionsLoading(true);
-    
     try {
       const { data, error } = await supabase
         .from('assessment_sessions')
         .select('*, students(name, grade)')
         .eq('teacher_id', profile.id)
         .order('created_at', { ascending: false });
-      
       if (error) throw error;
-      
       if (data) {
-        const formattedSessions: Session[] = data.map(s => ({
+        setSessions(data.map(s => ({
           id: s.id,
           student_id: s.student_id,
           session_type: s.session_type,
@@ -181,16 +167,10 @@ const TeacherDashboard = () => {
           created_at: s.created_at,
           studentName: (s.students as any)?.name || 'Unknown',
           studentGrade: Number.parseInt((s.students as any)?.grade || '1') || 1,
-        }));
-        setSessions(formattedSessions);
+        })));
       }
     } catch (error: any) {
       console.error('Error fetching sessions:', error);
-      toast({
-        title: 'Failed to load sessions',
-        description: error.message,
-        variant: 'destructive'
-      });
     } finally {
       setSessionsLoading(false);
     }
@@ -203,54 +183,22 @@ const TeacherDashboard = () => {
 
   const handleAddStudent = async () => {
     const name = newStudentName.trim();
-    if (!name) {
-      toast({ title: t('teacher.studentName') + ' required', variant: 'destructive' });
-      return;
-    }
-    
-    const age = Number.parseInt(newStudentAge);
-    if (newStudentAge && (Number.isNaN(age) || age < 3 || age > 25)) {
-      toast({ title: t('teacher.age') + ' must be 3-25', variant: 'destructive' });
-      return;
-    }
-    
-    const grade = Number.parseInt(newStudentGrade);
-    if (!newStudentGrade || Number.isNaN(grade) || grade < 1 || grade > 12) {
-      toast({ title: t('teacher.gradeLevel') + ' must be 1-12', variant: 'destructive' });
-      return;
-    }
-
-    // Validate parent email if provided
-    if (newStudentParentEmail.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(newStudentParentEmail.trim())) {
-        toast({ title: 'Invalid parent email address', variant: 'destructive' });
-        return;
-      }
-    }
-
-    if (!profile?.id) {
-      toast({ title: 'Not authenticated', variant: 'destructive' });
-      return;
-    }
+    if (!name || !newStudentGrade) return;
 
     setIsAddingStudent(true);
-    
     try {
       const { data, error } = await supabase
         .from('students')
         .insert({ 
           name, 
-          age: newStudentAge ? age : null, 
-          grade: String(grade), 
-          teacher_id: profile.id,
+          age: newStudentAge ? Number.parseInt(newStudentAge) : null, 
+          grade: newStudentGrade, 
+          teacher_id: profile?.id,
           parent_email: newStudentParentEmail.trim() || null
         })
         .select()
         .single();
-
       if (error) throw error;
-
       setStudents([...students, { 
         id: data.id, 
         name: data.name, 
@@ -259,13 +207,9 @@ const TeacherDashboard = () => {
         parent_email: data.parent_email
       }]);
       setAddStudentDialogOpen(false);
-      setNewStudentName('');
-      setNewStudentAge('');
-      setNewStudentGrade('');
-      setNewStudentParentEmail('');
       toast({ title: t('teacher.studentAdded') });
     } catch (error: any) {
-      toast({ title: 'Failed to add student', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setIsAddingStudent(false);
     }
@@ -273,67 +217,34 @@ const TeacherDashboard = () => {
 
   const handleUpdateParentEmail = async () => {
     if (!editingStudent) return;
-    
-    // Validate email if provided
-    if (editParentEmail.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(editParentEmail.trim())) {
-        toast({ title: 'Invalid email address', variant: 'destructive' });
-        return;
-      }
-    }
-    
     try {
       const { error } = await supabase
         .from('students')
         .update({ parent_email: editParentEmail.trim() || null })
         .eq('id', editingStudent.id);
-
       if (error) throw error;
-
-      setStudents(students.map(s => 
-        s.id === editingStudent.id 
-          ? { ...s, parent_email: editParentEmail.trim() || null }
-          : s
-      ));
+      fetchStudents();
       setEditingStudent(null);
-      setEditParentEmail('');
-      toast({ title: 'Parent email updated successfully' });
+      toast({ title: 'Updated' });
     } catch (error: any) {
-      toast({ title: 'Failed to update parent email', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error', variant: 'destructive' });
     }
   };
 
   const handleDeleteStudent = async () => {
     if (!studentToDelete) return;
-
     try {
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentToDelete.id);
-
+      const { error } = await supabase.from('students').delete().eq('id', studentToDelete.id);
       if (error) throw error;
-
       setStudents(students.filter(s => s.id !== studentToDelete.id));
       setDeleteConfirmOpen(false);
-      setStudentToDelete(null);
-      toast({ title: 'Student deleted successfully' });
     } catch (error: any) {
-      toast({ title: 'Failed to delete student', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error', variant: 'destructive' });
     }
-  };
-
-  const openDeleteConfirm = (student: Student) => {
-    setStudentToDelete(student);
-    setDeleteConfirmOpen(true);
   };
 
   const handleStartSession = () => {
-    if (!selectedStudent) {
-      toast({ title: t('teacher.selectStudent'), variant: 'destructive' });
-      return;
-    }
+    if (!selectedStudent) return;
     const student = students.find(s => s.id === selectedStudent);
     const grade = selectedGrade || student?.grade || 1;
     setSessionDialogOpen(false);
@@ -353,29 +264,18 @@ const TeacherDashboard = () => {
       teacherName: profile?.full_name || undefined,
       interpretation: interpretation.text,
     });
-    toast({ title: t('session.pdfGenerated') });
   };
 
-  const completedSessions = sessions.filter(s => s.status === 'completed');
   const stats = {
     totalStudents: students.length,
     totalSessions: sessions.length,
     flaggedStudents: sessions.filter(s => s.flagged).length,
-    avgScore: completedSessions.length > 0 
-      ? Math.round(completedSessions.reduce((acc, s) => acc + (s.overall_score || 0), 0) / completedSessions.length) 
+    avgScore: sessions.filter(s => s.status === 'completed').length > 0 
+      ? Math.round(sessions.filter(s => s.status === 'completed').reduce((acc, s) => acc + (s.overall_score || 0), 0) / sessions.filter(s => s.status === 'completed').length) 
       : 0,
   };
 
-  const selectedStudentData = students.find(s => s.id === selectedStudentForReport);
-  const selectedStudentSessions = sessions.filter(s => s.student_id === selectedStudentForReport && s.status === 'completed');
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
@@ -388,350 +288,126 @@ const TeacherDashboard = () => {
               <p className="text-sm text-muted-foreground">{t('dashboard.welcome')}, {profile?.full_name}</p>
             </div>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            {t('dashboard.logout')}
-          </Button>
+          <Button variant="outline" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" />{t('dashboard.logout')}</Button>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card><CardContent className="p-4 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center"><Users className="h-6 w-6 text-primary" /></div><div><p className="text-2xl font-bold">{stats.totalStudents}</p><p className="text-sm text-muted-foreground">{t('dashboard.students')}</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-chart-2/20 flex items-center justify-center"><FileText className="h-6 w-6 text-chart-2" /></div><div><p className="text-2xl font-bold">{stats.totalSessions}</p><p className="text-sm text-muted-foreground">{t('dashboard.sessions')}</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center"><AlertTriangle className="h-6 w-6 text-destructive" /></div><div><p className="text-2xl font-bold">{stats.flaggedStudents}</p><p className="text-sm text-muted-foreground">{t('teacher.flagged')}</p></div></CardContent></Card>
-          <Card><CardContent className="p-4 flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-chart-3/20 flex items-center justify-center"><TrendingUp className="h-6 w-6 text-chart-3" /></div><div><p className="text-2xl font-bold">{stats.avgScore}%</p><p className="text-sm text-muted-foreground">{t('teacher.avgScore')}</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-4"><Users className="h-6 w-6 text-primary" /><div><p className="text-2xl font-bold">{stats.totalStudents}</p><p className="text-sm text-muted-foreground">{t('dashboard.students')}</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-4"><FileText className="h-6 w-6 text-chart-2" /><div><p className="text-2xl font-bold">{stats.totalSessions}</p><p className="text-sm text-muted-foreground">{t('dashboard.sessions')}</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-4"><AlertTriangle className="h-6 w-6 text-destructive" /><div><p className="text-2xl font-bold">{stats.flaggedStudents}</p><p className="text-sm text-muted-foreground">{t('teacher.flagged')}</p></div></CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center gap-4"><TrendingUp className="h-6 w-6 text-chart-3" /><div><p className="text-2xl font-bold">{stats.avgScore}%</p><p className="text-sm text-muted-foreground">{t('teacher.avgScore')}</p></div></CardContent></Card>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList>
             <TabsTrigger value="overview">{t('dashboard.students')}</TabsTrigger>
             <TabsTrigger value="reports">{t('dashboard.reports')}</TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <History className="h-4 w-4" />
-              Session History
-            </TabsTrigger>
-            <TabsTrigger value="training" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              {t('training.title')}
-            </TabsTrigger>
+            <TabsTrigger value="history"><History className="h-4 w-4 mr-2" />History</TabsTrigger>
+            <TabsTrigger value="training"><BookOpen className="h-4 w-4 mr-2" />Training</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
             <div className="grid lg:grid-cols-3 gap-8">
               <Card className="lg:col-span-1">
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <div><CardTitle>{t('dashboard.students')}</CardTitle><CardDescription>{t('teacher.manageStudents')}</CardDescription></div>
+                  <CardTitle>{t('dashboard.students')}</CardTitle>
                   <Dialog open={addStudentDialogOpen} onOpenChange={setAddStudentDialogOpen}>
                     <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4" /></Button></DialogTrigger>
                     <DialogContent>
-                      <DialogHeader><DialogTitle>{t('teacher.addStudent')}</DialogTitle><DialogDescription>{t('teacher.enterDetails')}</DialogDescription></DialogHeader>
+                      <DialogHeader><DialogTitle>{t('teacher.addStudent')}</DialogTitle></DialogHeader>
                       <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="studentName">{t('teacher.studentName')} *</Label>
-                          <Input id="studentName" placeholder={t('teacher.studentName')} value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} maxLength={100} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="studentAge">{t('teacher.age')} ({t('teacher.optional')})</Label>
-                          <Input id="studentAge" type="number" placeholder="3-25" value={newStudentAge} onChange={(e) => setNewStudentAge(e.target.value)} min={3} max={25} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('teacher.gradeLevel')} *</Label>
-                          <Select value={newStudentGrade} onValueChange={setNewStudentGrade}>
-                            <SelectTrigger><SelectValue placeholder={t('teacher.selectGrade')} /></SelectTrigger>
-                            <SelectContent>{Array.from({ length: 12 }, (_, i) => (<SelectItem key={i + 1} value={String(i + 1)}>{t('teacher.grade')} {i + 1}</SelectItem>))}</SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="parentEmail">Parent Email ({t('teacher.optional')})</Label>
-                          <Input 
-                            id="parentEmail" 
-                            type="email" 
-                            placeholder="parent@example.com" 
-                            value={newStudentParentEmail} 
-                            onChange={(e) => setNewStudentParentEmail(e.target.value)} 
-                            maxLength={255} 
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            <Mail className="h-3 w-3 inline mr-1" />
-                            Student will be automatically linked when parent signs up with this email
-                          </p>
-                        </div>
-                        <Button onClick={handleAddStudent} className="w-full" disabled={isAddingStudent}>
-                          {isAddingStudent ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('teacher.adding')}</> : <><Plus className="h-4 w-4 mr-2" />{t('teacher.addStudent')}</>}
-                        </Button>
+                        <Input placeholder="Name" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} />
+                        <Input type="number" placeholder="Age" value={newStudentAge} onChange={(e) => setNewStudentAge(e.target.value)} />
+                        <Select onValueChange={setNewStudentGrade}><SelectTrigger><SelectValue placeholder="Grade" /></SelectTrigger><SelectContent>{Array.from({ length: 12 }, (_, i) => <SelectItem key={i+1} value={String(i+1)}>Grade {i+1}</SelectItem>)}</SelectContent></Select>
+                        <Input placeholder="Parent Email" value={newStudentParentEmail} onChange={(e) => setNewStudentParentEmail(e.target.value)} />
+                        <Button onClick={handleAddStudent} className="w-full">{isAddingStudent ? 'Adding...' : 'Add Student'}</Button>
                       </div>
                     </DialogContent>
                   </Dialog>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {students.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">{t('teacher.noStudents')}</p>
-                  ) : (
-                    students.map((student) => (
-                      <div key={student.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
-                        <div className="flex-1">
-                          <p className="font-medium">{student.name}</p>
-                          <p className="text-sm text-muted-foreground">{t('teacher.grade')} {student.grade} {student.age ? `• ${t('teacher.age')} ${student.age}` : ''}</p>
-                          {student.parent_email ? (
-                            <p className="text-xs text-chart-3 flex items-center gap-1 mt-1">
-                              <Mail className="h-3 w-3" />
-                              Linked: {student.parent_email}
-                            </p>
-                          ) : (
-                            <button 
-                              onClick={() => { setEditingStudent(student); setEditParentEmail(student.parent_email || ''); }}
-                              className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mt-1"
-                            >
-                              <Edit2 className="h-3 w-3" />
-                              Add parent email
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button size="sm" variant="ghost" onClick={() => { setEditingStudent(student); setEditParentEmail(student.parent_email || ''); }}>
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" onClick={() => { setSelectedStudent(student.id); setSelectedGrade(String(student.grade)); setSessionDialogOpen(true); }}>
-                            <Play className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => openDeleteConfirm(student)}>
-                            <AlertTriangle className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
+                  {students.map(student => (
+                    <div key={student.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div><p className="font-medium">{student.name}</p><p className="text-xs text-muted-foreground">Grade {student.grade}</p></div>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => { setSelectedStudent(student.id); setSessionDialogOpen(true); }}><Play className="h-4 w-4 text-primary" /></Button>
+                        <Button size="sm" variant="ghost" onClick={() => openDeleteConfirm(student)}><AlertTriangle className="h-4 w-4 text-destructive" /></Button>
                       </div>
-                    ))
-                  )}
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
 
               <Card className="lg:col-span-2">
                 <CardHeader className="flex flex-row items-center justify-between">
-                  <div><CardTitle>{t('dashboard.sessions')}</CardTitle><CardDescription>{t('teacher.recentSessions')}</CardDescription></div>
-                  <Dialog open={sessionDialogOpen} onOpenChange={setSessionDialogOpen}>
-                    <DialogTrigger asChild><Button><Play className="h-4 w-4 mr-2" />{t('dashboard.startSession')}</Button></DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>{t('teacher.startNewSession')}</DialogTitle></DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label>{t('teacher.selectStudent')}</Label>
-                          <Select value={selectedStudent} onValueChange={(v) => { setSelectedStudent(v); const s = students.find(st => st.id === v); if (s) setSelectedGrade(String(s.grade)); }}>
-                            <SelectTrigger><SelectValue placeholder={t('teacher.chooseStudent')} /></SelectTrigger>
-                            <SelectContent>{students.map((student) => (<SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>))}</SelectContent>
-                          </Select>
+                  <div><CardTitle>{t('dashboard.sessions')}</CardTitle></div>
+                  <div className="flex gap-2">
+                    <Dialog open={sessionDialogOpen} onOpenChange={setSessionDialogOpen}>
+                      <DialogTrigger asChild><Button><Play className="h-4 w-4 mr-2" />{t('dashboard.startSession')}</Button></DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader><DialogTitle>New Voice Session</DialogTitle></DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <Select value={selectedStudent} onValueChange={setSelectedStudent}><SelectTrigger><SelectValue placeholder="Select Student" /></SelectTrigger><SelectContent>{students.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent></Select>
+                          <Select value={sessionType} onValueChange={(v: any) => setSessionType(v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dyslexia">Dyslexia</SelectItem><SelectItem value="dyscalculia">Dyscalculia</SelectItem></SelectContent></Select>
+                          <Button onClick={handleStartSession} className="w-full">Start Voice Test</Button>
                         </div>
-                        <div className="space-y-2">
-                          <Label>{t('teacher.gradeLevel')}</Label>
-                          <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-                            <SelectTrigger><SelectValue placeholder={t('teacher.selectGrade')} /></SelectTrigger>
-                            <SelectContent>{Array.from({ length: 12 }, (_, i) => (<SelectItem key={i + 1} value={String(i + 1)}>{t('teacher.grade')} {i + 1}</SelectItem>))}</SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{t('teacher.assessmentType')}</Label>
-                          <Select value={sessionType} onValueChange={(v) => setSessionType(v as 'dyslexia' | 'dyscalculia')}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="dyslexia">{t('teacher.dyslexiaAssessment')}</SelectItem>
-                              <SelectItem value="dyscalculia">{t('teacher.dyscalculiaAssessment')}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button onClick={handleStartSession} className="w-full">{t('dashboard.startSession')}</Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogContent>
+                    </Dialog>
+                    
+                    {/* REDIRECTION BUTTON FOR WRITTEN TEST */}
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.open('https://jrqtpp3s-5000.inc1.devtunnels.ms/', '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      {t('dashboard.writtentest')}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  {sessionsLoading && (
-                    <div className="text-center py-8"><Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" /></div>
-                  )}
-                  {!sessionsLoading && sessions.length === 0 && (
-                    <p className="text-muted-foreground text-center py-8">No sessions yet. Start an assessment!</p>
-                  )}
-                  {!sessionsLoading && sessions.length > 0 && (
-                    <div className="space-y-4">
-                      {sessions.slice(0, 5).map((session) => {
-                        const interpretation = getScoreInterpretation(session.overall_score, session.session_type, t);
-                        return (
-                          <div key={session.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 transition-colors">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${session.flagged ? 'bg-destructive/10' : 'bg-chart-3/20'}`}>
-                                {session.flagged ? <AlertTriangle className="h-5 w-5 text-destructive" /> : <CheckCircle className="h-5 w-5 text-chart-3" />}
-                              </div>
-                              <div>
-                                <p className="font-medium">{session.studentName}</p>
-                                <p className="text-sm text-muted-foreground capitalize">{session.session_type} • {t('teacher.grade')} {session.studentGrade}</p>
-                                {session.overall_score !== null && (
-                                  <p className={`text-xs mt-1 ${interpretation.variant === 'destructive' ? 'text-destructive' : 'text-muted-foreground'}`}>{interpretation.text}</p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <Badge variant={session.status === 'completed' ? 'default' : 'secondary'}>{session.status}</Badge>
-                              {session.overall_score !== null && <span className="text-lg font-semibold">{session.overall_score}%</span>}
-                              {session.status === 'completed' && (
-                                <Button variant="ghost" size="sm" onClick={() => handleExportPDF(session)}><Download className="h-4 w-4" /></Button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <div className="space-y-4">
+                    {sessions.slice(0, 5).map(session => (
+                      <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          {session.flagged ? <AlertTriangle className="text-destructive h-5 w-5" /> : <CheckCircle className="text-chart-3 h-5 w-5" />}
+                          <div><p className="font-medium">{session.studentName}</p><p className="text-xs text-muted-foreground uppercase">{session.session_type}</p></div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="font-bold">{session.overall_score}%</span>
+                          <Button size="sm" variant="ghost" onClick={() => handleExportPDF(session)}><Download className="h-4 w-4" /></Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
-
+          
           <TabsContent value="reports">
-            <div className="grid lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t('dashboard.reports')}</CardTitle>
-                    <CardDescription>View and export detailed assessment reports</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-4">
-                      <Label>Select Student for Progress Report</Label>
-                      <Select value={selectedStudentForReport} onValueChange={setSelectedStudentForReport}>
-                        <SelectTrigger><SelectValue placeholder="Choose a student" /></SelectTrigger>
-                        <SelectContent>{students.map((student) => (<SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>))}</SelectContent>
-                      </Select>
-                    </div>
-                    
-                    {selectedStudentForReport && selectedStudentData && (
-                      <ProgressChart 
-                        studentName={selectedStudentData.name}
-                        sessions={selectedStudentSessions.map(s => ({
-                          id: s.id,
-                          date: s.created_at,
-                          score: s.overall_score || 0,
-                          sessionType: s.session_type,
-                        }))}
-                      />
-                    )}
-                    
-                    <div className="space-y-4 mt-6">
-                      {completedSessions.map((session) => {
-                        const interpretation = getScoreInterpretation(session.overall_score, session.session_type, t);
-                        return (
-                          <div key={session.id} className="flex items-center justify-between p-4 rounded-lg border border-border">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3">
-                                <p className="font-medium">{session.studentName}</p>
-                                <Badge variant={interpretation.variant}>{session.overall_score}%</Badge>
-                                {session.flagged && <Badge variant="destructive">{t('teacher.flagged')}</Badge>}
-                              </div>
-                              <p className="text-sm text-muted-foreground capitalize mt-1">{session.session_type} • {t('teacher.grade')} {session.studentGrade} • {new Date(session.created_at).toLocaleDateString()}</p>
-                              <p className="text-sm mt-2">{interpretation.text}</p>
-                            </div>
-                            <Button variant="outline" onClick={() => handleExportPDF(session)}>
-                              <Download className="h-4 w-4 mr-2" />{t('session.exportPDF')}
-                            </Button>
-                          </div>
-                        );
-                      })}
-                      {completedSessions.length === 0 && <p className="text-center text-muted-foreground py-8">No completed sessions yet.</p>}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              <div>
-                {selectedStudentForReport && selectedStudentData && selectedStudentSessions.length > 0 && (
-                  <PracticeWorksheet 
-                    studentName={selectedStudentData.name}
-                    sessionType={selectedStudentSessions[0].session_type as 'dyslexia' | 'dyscalculia'}
-                    score={selectedStudentSessions[0].overall_score || 50}
-                    grade={selectedStudentData.grade}
-                  />
-                )}
-              </div>
-            </div>
+            <Card><CardHeader><CardTitle>Progress Reports</CardTitle></CardHeader><CardContent><p className="text-muted-foreground">Select a student from the overview to view detailed trends.</p></CardContent></Card>
           </TabsContent>
 
           <TabsContent value="history">
-            <SessionHistory 
-              sessions={sessions.map(s => ({
-                ...s,
-                studentName: s.studentName,
-                studentGrade: s.studentGrade,
-              }))}
-              viewType="teacher"
-              onExportPDF={handleExportPDF}
-            />
+            <SessionHistory sessions={sessions} viewType="teacher" onExportPDF={handleExportPDF} />
           </TabsContent>
 
           <TabsContent value="training">
             <TeacherTraining />
           </TabsContent>
         </Tabs>
-
-        {/* Edit Parent Email Dialog */}
-        <Dialog open={!!editingStudent} onOpenChange={(open) => { if (!open) { setEditingStudent(null); setEditParentEmail(''); } }}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Link Parent Account</DialogTitle>
-              <DialogDescription>
-                Enter the parent's email address to link this student to their parent account.
-                The student will automatically appear in the parent's dashboard.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Student</Label>
-                <p className="font-medium">{editingStudent?.name}</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="editParentEmail">Parent Email</Label>
-                <Input 
-                  id="editParentEmail" 
-                  type="email" 
-                  placeholder="parent@example.com" 
-                  value={editParentEmail} 
-                  onChange={(e) => setEditParentEmail(e.target.value)} 
-                  maxLength={255} 
-                />
-                <p className="text-xs text-muted-foreground">
-                  <Mail className="h-3 w-3 inline mr-1" />
-                  When a parent signs up with this email, the student will be automatically linked to their account.
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={handleUpdateParentEmail} className="flex-1">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Save
-                </Button>
-                <Button variant="outline" onClick={() => { setEditingStudent(null); setEditParentEmail(''); }}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Student?</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete <strong>{studentToDelete?.name}</strong>? This will also delete all associated session data. This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteStudent}>
-                Delete Student
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </main>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Delete Student?</DialogTitle></DialogHeader>
+          <p>This will remove all session data for {studentToDelete?.name}.</p>
+          <div className="flex justify-end gap-2 mt-4"><Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button><Button variant="destructive" onClick={handleDeleteStudent}>Delete</Button></div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

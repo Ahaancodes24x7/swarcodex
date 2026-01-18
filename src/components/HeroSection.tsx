@@ -21,8 +21,8 @@ const HeroSection = () => {
     },
     {
       icon: Sparkles,
-      title: 'Personalized Support',
-      desc: 'Tailored guidance for parents and teachers.',
+      title: 'Written Screening Tool',
+      desc: 'Structured written test for learning challenges',
     },
   ];
 
